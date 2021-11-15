@@ -1,0 +1,37 @@
+// For format details, see https://aka.ms/devcontainer.json.
+{
+	"name": "riot-os",
+	"build": {
+		"dockerfile": "Dockerfile"
+	},
+	"runArgs": [
+		// Add hostname so that bash shows a nice name.
+		"--hostname",
+		"riot-os",
+		// Add hostfile entry for easy access to WSL host ip.
+		"--add-host",
+		"host.docker.internal:host-gateway",
+	],
+	// IDs of extensions installed when the container is created.
+	"extensions": [
+		// C code Intellisense and code formater / helpers.
+		"ms-vscode.cpptools",
+		"cschlosser.doxdocgen",
+		"zachflower.uncrustify",
+		// Detection and easy access to project tasks in tasks.json.
+		"spmeesseman.vscode-taskexplorer"
+	],
+	// Container specific settings.json values on container create.
+	"settings": {
+		// Disable C_Cpp default formatter and use the uncrustify extension for
+		// *.c and *.h files with the provided RIOT configuration.
+		"C_Cpp.formatting": "Disabled",
+		"[c,h]": {
+			"editor.defaultFormatter": "zachflower.uncrustify"
+		},
+		"uncrustify.configPath.linux": "$RIOTBASE/uncrustify-riot.cfg",
+		// Trigger format on save.
+		"editor.formatOnSave": true,
+		"editor.formatOnPaste": false // uncrustify does not like it
+	},
+}

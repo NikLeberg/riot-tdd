@@ -1,0 +1,124 @@
+From 2438369feb9cd8eb675f36505d92c6042f481acb Mon Sep 17 00:00:00 2001
+From: riot <riot@example.com>
+Date: Mon, 15 Nov 2021 22:26:48 +0000
+Subject: [PATCH] Makefile: add EXTERNAL_PKG_DIRS
+
+---
+ Makefile.base    |  2 +-
+ Makefile.dep     |  2 +-
+ Makefile.include | 34 ++++++++++++++++++++++++++--------
+ 3 files changed, 28 insertions(+), 10 deletions(-)
+
+diff --git a/Makefile.base b/Makefile.base
+index b4b1a495cc..e7f575b423 100644
+--- a/Makefile.base
++++ b/Makefile.base
+@@ -94,7 +94,7 @@ compile-commands: | $(DIRS:%=COMPILE-COMMANDS--%)
+ 	$(file >>$(BINDIR)/$(MODULE)/compile_cmds.txt,TARGET_ARCH_LLVM: $(TARGET_ARCH_LLVM))
+ 
+ # include makefile snippets for packages in $(USEPKG) that modify GENSRC:
+--include $(USEPKG:%=$(RIOTPKG)/%/Makefile.gensrc)
++-include $(PKG_PATHS:%=%Makefile.gensrc)
+ 
+ GENOBJC     := $(GENSRC:%.c=%.o)
+ OBJC_LTO    := $(SRC:%.c=$(BINDIR)/$(MODULE)/%.o)
+diff --git a/Makefile.dep b/Makefile.dep
+index 8a8adb2116..538fd37b4f 100644
+--- a/Makefile.dep
++++ b/Makefile.dep
+@@ -20,7 +20,7 @@ include $(RIOTBASE)/drivers/Makefile.dep
+ -include $(sort $(USEMODULE:%=$(RIOTBASE)/drivers/%/Makefile.dep))
+ 
+ # pull dependencies from packages
+--include $(USEPKG:%=$(RIOTPKG)/%/Makefile.dep)
++-include $(PKG_PATHS:%=%Makefile.dep)
+ 
+ ifneq (,$(filter mpu_stack_guard,$(USEMODULE)))
+   FEATURES_REQUIRED += cortexm_mpu
+diff --git a/Makefile.include b/Makefile.include
+index f93bbb740a..24cfd0f4ed 100644
+--- a/Makefile.include
++++ b/Makefile.include
+@@ -141,6 +141,13 @@ EXTERNAL_BOARD_DIRS             := $(foreach dir,\
+ EXTERNAL_MODULE_DIRS            := $(foreach dir,\
+                                              $(EXTERNAL_MODULE_DIRS),\
+                                              $(abspath $(dir)))
++PKG_DIRS                        += $(EXTERNAL_PKG_DIRS)
++PKG_DIRS                        += $(RIOTPKG)
++export PKG_DIRS                 := $(foreach dir,\
++                                             $(PKG_DIRS),\
++                                             $(abspath $(dir)))
++
++$(info $(PKG_DIRS))
+ 
+ # Ensure that all directories are set and don't contain spaces.
+ ifneq (, $(filter-out 1, $(foreach v,$(__DIRECTORY_VARIABLES),$(words $($(v))))))
+@@ -414,6 +421,10 @@ else
+   # avoid recursive expansion
+   USEMODULE := $(sort $(USEMODULE))
+ 
++  # add paths to all packages
++  export PKG_PATHS := $(sort $(foreach dir,$(PKG_DIRS),\
++    $(foreach mod,$(USEPKG),$(dir $(wildcard $(dir)/$(mod)/Makefile)))))
++
+   # process dependencies
+   include $(RIOTMAKE)/dependency_resolution.inc.mk
+ endif
+@@ -542,8 +553,8 @@ include $(RIOTBASE)/sys/Makefile.include
+ # include Makefile.includes of each driver modules if they exist
+ -include $(USEMODULE:%=$(RIOTBASE)/drivers/%/Makefile.include)
+ 
+-# include Makefile.includes for packages in $(USEPKG)
+--include $(USEPKG:%=$(RIOTPKG)/%/Makefile.include)
++# include Makefile.includes for packages in $(PKG_PATHS)
++-include $(PKG_PATHS:%=%Makefile.include)
+ 
+ # include external modules configuration
+ -include $(EXTERNAL_MODULE_PATHS:%=%/Makefile.include)
+@@ -744,30 +755,37 @@ endif
+ all $(BASELIBS) $(ARCHIVES) $(BUILDDEPS) ..in-docker-container: | $(CLEAN)
+ 
+ .PHONY: pkg-prepare pkg-build pkg-build-%
++
++# Definition of a newline for "foreach" expansion.
++define \n
++
++
++endef
++
+ pkg-prepare:
+-	-@for i in $(USEPKG) ; do "$(MAKE)" -C $(RIOTPKG)/$$i prepare ; done
++	$(foreach dir,$(PKG_PATHS),"$(MAKE)" -C $(dir) prepare${\n})
+ 
+ pkg-build: $(USEPKG:%=pkg-build-%)
+ pkg-build-%: $(BUILDDEPS)
+-	$(QQ)"$(MAKE)" -C $(RIOTPKG)/$*
++	$(foreach dir,$(PKG_PATHS),$(QQ)"$(MAKE)" -C $(dir)${\n})
+ 
+ clean:
+ ifndef MAKE_RESTARTS
+-	-@for i in $(USEPKG) ; do "$(MAKE)" -C $(RIOTPKG)/$$i clean ; done
++	-$(foreach dir,$(PKG_PATHS),"$(MAKE)" -C $(dir) clean${\n})
+ 	-@rm -rf $(BINDIR)
+ 	-@rm -rf $(SCANBUILD_OUTPUTDIR)
+ endif
+ 
+ # Remove intermediates, but keep the .elf, .hex and .map etc.
+ clean-intermediates:
+-	-@for i in $(USEPKG) ; do "$(MAKE)" -C $(RIOTPKG)/$$i distclean ; done
++	-$(foreach dir,$(PKG_PATHS),"$(MAKE)" -C $(dir) distclean${\n})
+ 	-@rm -rf $(BINDIR)/*.a $(BINDIR)/*/
+ 
+ clean-pkg:
+-	-@for i in $(USEPKG) ; do "$(MAKE)" -C $(RIOTPKG)/$$i distclean ; done
++	-$(foreach dir,$(PKG_PATHS),"$(MAKE)" -C $(dir) distclean${\n})
+ 
+ distclean:
+-	-@for i in $(USEPKG) ; do "$(MAKE)" -C $(RIOTPKG)/$$i distclean ; done
++	-$(foreach dir,$(PKG_PATHS),"$(MAKE)" -C $(dir) distclean${\n})
+ 	-@rm -rf $(BINDIRBASE)
+ 
+ # Include PROGRAMMER_FLASH/PROGRAMMER_RESET variables
+-- 
+2.17.1
+

@@ -1,0 +1,73 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "inputs": [
+        {
+            // https://github.com/microsoft/vscode-cpptools/issues/6476
+            "id": "board",
+            "type": "command",
+            "command": "cpptools.activeConfigCustomVariable",
+            "args": "board"
+        }
+    ],
+    "options": {
+        "env": {
+            // Current active board e.g. configuration selected from
+            // c_cpp_properties.json
+            "BOARD": "${input:board}",
+            // Where the make target "compile-commands" should put the
+            // compile_commands.json. Is used by c_cpp_properties.json.
+            "COMPILE_COMMANDS_PATH": "${workspaceFolder}/bin/${input:board}/compile_commands.json"
+        }
+    },
+    "presentation": {
+        "echo": true,
+        "focus": true,
+        "showReuseMessage": false
+    },
+    "tasks": [
+        {
+            "label": "extra-clean",
+            "type": "shell",
+            "command": "make clean",
+            "presentation": {
+                "reveal": "never",
+                "focus": false,
+            }
+        },
+        {
+            "label": "extra-compile-commands",
+            "type": "shell",
+            "command": "make compile-commands"
+        },
+        {
+            "label": "extra-disassemble",
+            "type": "shell",
+            "command": "make disassemble"
+        },
+        {
+            "label": "extra-debug-server",
+            "type": "shell",
+            "command": "make debug-server"
+        },
+        {
+            "label": "build",
+            "type": "shell",
+            "command": "make",
+            "dependsOn": [
+                "extra-compile-commands"
+            ]
+        },
+        {
+            "label": "flash",
+            "type": "shell",
+            "command": "make flash"
+        },
+        {
+            "label": "terminal",
+            "type": "shell",
+            "command": "make term"
+        }
+    ]
+}

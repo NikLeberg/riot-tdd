@@ -1,0 +1,19 @@
+/**
+ * @defgroup pkg_uLAPack   μLAPack
+ * @ingroup  pkg
+ * @brief    Micro Linear Algebra Package
+ *
+ * # Introduction
+ *
+ * Micro Linear Algebra Package (Pronounced: mu la pack)
+ * 
+ * A small linear algebra package to compute various matrix/vector operations.
+ * The library is optimized to work on microcontrollers and embedded
+ * environments, but can be used anywhere C can be compiled.
+ *
+ * # License
+ *
+ * Licensed under μLAPack License v1.0.
+ *
+ * @see      https://github.com/SargisYonan/uLAPack.git
+ */
