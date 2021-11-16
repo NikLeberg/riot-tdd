@@ -25,7 +25,6 @@ USEMODULE += saul_default
 # Our own packages:
 EXTERNAL_PKG_DIRS += pkg
 USEPKG += uKal
-USEPKG += uLAPack
 
 # Our own modules:
 EXTERNAL_MODULE_DIRS += src

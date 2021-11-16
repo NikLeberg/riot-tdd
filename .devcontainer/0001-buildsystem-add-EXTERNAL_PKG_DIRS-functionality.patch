@@ -1,0 +1,153 @@
+From b234166ca54b78c0d4efd8f296da94847e87f798 Mon Sep 17 00:00:00 2001
+From: riot <riot@example.com>
+Date: Tue, 16 Nov 2021 08:11:14 +0000
+Subject: [PATCH] buildsystem: add EXTERNAL_PKG_DIRS functionality
+
+---
+ Makefile.base                          |  4 ++--
+ Makefile.dep                           |  2 +-
+ Makefile.include                       | 26 ++++++++++++++++++--------
+ makefiles/dependency_resolution.inc.mk |  4 ++++
+ makefiles/vars.inc.mk                  |  1 +
+ 5 files changed, 26 insertions(+), 11 deletions(-)
+
+diff --git a/Makefile.base b/Makefile.base
+index b4b1a495cc..57adc5794a 100644
+--- a/Makefile.base
++++ b/Makefile.base
+@@ -93,8 +93,8 @@ compile-commands: | $(DIRS:%=COMPILE-COMMANDS--%)
+ 	$(file >>$(BINDIR)/$(MODULE)/compile_cmds.txt,TARGET_ARCH: $(TARGET_ARCH))
+ 	$(file >>$(BINDIR)/$(MODULE)/compile_cmds.txt,TARGET_ARCH_LLVM: $(TARGET_ARCH_LLVM))
+ 
+-# include makefile snippets for packages in $(USEPKG) that modify GENSRC:
+--include $(USEPKG:%=$(RIOTPKG)/%/Makefile.gensrc)
++# include makefile snippets for packages in $(PKG_PATHS) that modify GENSRC:
++-include $(PKG_PATHS:%=%Makefile.gensrc)
+ 
+ GENOBJC     := $(GENSRC:%.c=%.o)
+ OBJC_LTO    := $(SRC:%.c=$(BINDIR)/$(MODULE)/%.o)
+diff --git a/Makefile.dep b/Makefile.dep
+index 8a8adb2116..538fd37b4f 100644
+--- a/Makefile.dep
++++ b/Makefile.dep
+@@ -20,7 +20,7 @@ include $(RIOTBASE)/drivers/Makefile.dep
+ -include $(sort $(USEMODULE:%=$(RIOTBASE)/drivers/%/Makefile.dep))
+ 
+ # pull dependencies from packages
+--include $(USEPKG:%=$(RIOTPKG)/%/Makefile.dep)
++-include $(PKG_PATHS:%=%Makefile.dep)
+ 
+ ifneq (,$(filter mpu_stack_guard,$(USEMODULE)))
+   FEATURES_REQUIRED += cortexm_mpu
+diff --git a/Makefile.include b/Makefile.include
+index f93bbb740a..94c5ba306a 100644
+--- a/Makefile.include
++++ b/Makefile.include
+@@ -48,6 +48,7 @@ RIOTBOARD                       ?= $(RIOTBASE)/boards
+ EXTERNAL_BOARD_DIRS             ?=
+ RIOTMAKE                        ?= $(RIOTBASE)/makefiles
+ RIOTPKG                         ?= $(RIOTBASE)/pkg
++EXTERNAL_PKG_DIRS               ?=
+ RIOTTOOLS                       ?= $(RIOTBASE)/dist/tools
+ RIOTPROJECT                     ?= $(shell git rev-parse --show-toplevel 2>/dev/null || pwd)
+ BUILD_DIR                       ?= $(RIOTBASE)/build
+@@ -97,6 +98,9 @@ ifeq ($(INSIDE_DOCKER),0)
+   ifeq ($(origin EXTERNAL_MODULE_DIRS),command line)
+     $(error EXTERNAL_MODULE_DIRS must be passed as environment variable, and not as command line argument)
+   endif
++  ifeq ($(origin EXTERNAL_PKG_DIRS),command line)
++    $(error EXTERNAL_PKG_DIRS must be passed as environment variable, and not as command line argument)
++  endif
+ endif
+ 
+ # Deprecation of configuring 'RIOTBOARD'
+@@ -141,6 +145,12 @@ EXTERNAL_BOARD_DIRS             := $(foreach dir,\
+ EXTERNAL_MODULE_DIRS            := $(foreach dir,\
+                                              $(EXTERNAL_MODULE_DIRS),\
+                                              $(abspath $(dir)))
++EXTERNAL_PKG_DIRS               := $(foreach dir,\
++                                             $(EXTERNAL_PKG_DIRS),\
++                                             $(abspath $(dir)))
++
++# List of all package directories, gets scanned in dependency_resolution.ink.mk
++PKG_DIRS = $(EXTERNAL_PKG_DIRS) $(RIOTPKG)
+ 
+ # Ensure that all directories are set and don't contain spaces.
+ ifneq (, $(filter-out 1, $(foreach v,$(__DIRECTORY_VARIABLES),$(words $($(v))))))
+@@ -542,8 +552,8 @@ include $(RIOTBASE)/sys/Makefile.include
+ # include Makefile.includes of each driver modules if they exist
+ -include $(USEMODULE:%=$(RIOTBASE)/drivers/%/Makefile.include)
+ 
+-# include Makefile.includes for packages in $(USEPKG)
+--include $(USEPKG:%=$(RIOTPKG)/%/Makefile.include)
++# include Makefile.includes for packages in $(PKG_PATHS)
++-include $(PKG_PATHS:%=%Makefile.include)
+ 
+ # include external modules configuration
+ -include $(EXTERNAL_MODULE_PATHS:%=%/Makefile.include)
+@@ -745,29 +755,29 @@ all $(BASELIBS) $(ARCHIVES) $(BUILDDEPS) ..in-docker-container: | $(CLEAN)
+ 
+ .PHONY: pkg-prepare pkg-build pkg-build-%
+ pkg-prepare:
+-	-@for i in $(USEPKG) ; do "$(MAKE)" -C $(RIOTPKG)/$$i prepare ; done
++	$(foreach dir,$(PKG_PATHS),"$(MAKE)" -C $(dir) prepare $(NEWLINE))
+ 
+ pkg-build: $(USEPKG:%=pkg-build-%)
+ pkg-build-%: $(BUILDDEPS)
+-	$(QQ)"$(MAKE)" -C $(RIOTPKG)/$*
++	$(foreach dir,$(PKG_PATHS),$(QQ)"$(MAKE)" -C $(dir) $(NEWLINE))
+ 
+ clean:
+ ifndef MAKE_RESTARTS
+-	-@for i in $(USEPKG) ; do "$(MAKE)" -C $(RIOTPKG)/$$i clean ; done
++	-$(foreach dir,$(PKG_PATHS),"$(MAKE)" -C $(dir) clean $(NEWLINE))
+ 	-@rm -rf $(BINDIR)
+ 	-@rm -rf $(SCANBUILD_OUTPUTDIR)
+ endif
+ 
+ # Remove intermediates, but keep the .elf, .hex and .map etc.
+ clean-intermediates:
+-	-@for i in $(USEPKG) ; do "$(MAKE)" -C $(RIOTPKG)/$$i distclean ; done
++	-$(foreach dir,$(PKG_PATHS),"$(MAKE)" -C $(dir) distclean $(NEWLINE))
+ 	-@rm -rf $(BINDIR)/*.a $(BINDIR)/*/
+ 
+ clean-pkg:
+-	-@for i in $(USEPKG) ; do "$(MAKE)" -C $(RIOTPKG)/$$i distclean ; done
++	-$(foreach dir,$(PKG_PATHS),"$(MAKE)" -C $(dir) distclean $(NEWLINE))
+ 
+ distclean:
+-	-@for i in $(USEPKG) ; do "$(MAKE)" -C $(RIOTPKG)/$$i distclean ; done
++	-$(foreach dir,$(PKG_PATHS),"$(MAKE)" -C $(dir) distclean $(NEWLINE))
+ 	-@rm -rf $(BINDIRBASE)
+ 
+ # Include PROGRAMMER_FLASH/PROGRAMMER_RESET variables
+diff --git a/makefiles/dependency_resolution.inc.mk b/makefiles/dependency_resolution.inc.mk
+index a3a76223c2..b854e9e717 100644
+--- a/makefiles/dependency_resolution.inc.mk
++++ b/makefiles/dependency_resolution.inc.mk
+@@ -6,6 +6,10 @@
+ EXTERNAL_MODULE_PATHS := $(sort $(foreach dir,$(EXTERNAL_MODULE_DIRS),\
+   $(foreach mod,$(USEMODULE),$(dir $(wildcard $(dir)/$(mod)/Makefile)))))
+ 
++# Locate used modules in $(PKG_DIRS).
++PKG_PATHS := $(sort $(foreach dir,$(PKG_DIRS),\
++  $(foreach mod,$(USEPKG),$(dir $(wildcard $(dir)/$(mod)/Makefile)))))
++
+ # Back up current state to detect changes
+ OLD_STATE := $(USEMODULE) $(USEPKG) $(FEATURES_USED)
+ 
+diff --git a/makefiles/vars.inc.mk b/makefiles/vars.inc.mk
+index a77a351f53..43ac020aed 100644
+--- a/makefiles/vars.inc.mk
++++ b/makefiles/vars.inc.mk
+@@ -42,6 +42,7 @@ export BINDIRBASE            # This is the folder where the application should b
+ export BINDIR                # This is the folder where the application should be built in.
+ export BUILD_DIR             # This is the base folder to store common build files and artifacts, e.g. test results.
+ export APPDIR                # The base folder containing the application
++export PKG_PATHS             # List of absolute paths where packages of $(USEPKG) can be found
+ export PKGDIRBASE            # The base folder for building packages
+ 
+ export PYTHONPATH            # Python default search path for module filesi, with RIOT specific packages
+-- 
+2.17.1
+
