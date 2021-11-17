@@ -1,0 +1,14 @@
+# Test app is called the same as testfolder
+APPLICATION ?= tests_$(notdir $(patsubst %/,%,$(CURDIR)))
+
+BOARD ?= native
+RIOTBASE ?= /data/riotbuild/RIOT
+QUIET ?= 1
+DEVELHELP ?= 1
+
+CFLAGS += -DTHREAD_STACKSIZE_MAIN=THREAD_STACKSIZE_LARGE
+OUTPUT=TEXT
+
+# Add path our own modules and packages (path as seen from test app)
+EXTERNAL_MODULE_DIRS += ./../../src
+EXTERNAL_PKG_DIRS += ./../../pkg
