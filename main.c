@@ -5,8 +5,8 @@
 #include "shell.h"
 #include "shell_commands.h"
 
-#include "eekf.h"
 #include "ukal.h"
+#include "hello_module.h"
 
 static int hello_world(int argc, char **argv)
 {
@@ -62,7 +62,6 @@ int main(void)
 {
     char line_buf[SHELL_DEFAULT_BUFSIZE];
 
-    six = 7;
     shell_run(shell_commands, line_buf, SHELL_DEFAULT_BUFSIZE);
     return 0;
 }

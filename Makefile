@@ -1,4 +1,4 @@
-# name of your application
+# Name of your application
 APPLICATION = tdd
 
 # If no BOARD is found in the environment, use this default:
@@ -29,8 +29,9 @@ USEPKG += uKal
 # Our own modules:
 EXTERNAL_MODULE_DIRS += src
 USEMODULE += eekf
+USEMODULE += hello_module
 
-# Include the RIOT buildprocess
+# Start the RIOT buildprocess
 include $(RIOTBASE)/Makefile.include
 
 # Create disassembly of elf file
@@ -44,5 +45,7 @@ $(LISTFILE): $(ELFFILE)
 disassemble: $(LISTFILE)
 	$(info Disassembly listing created: $(LISTFILE))
 
+# Provide easy target for module / package generation
 gen-%:
 	riotgen $(@:gen-%=%) -r $(PWD) -i
+	
