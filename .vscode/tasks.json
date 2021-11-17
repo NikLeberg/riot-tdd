@@ -26,6 +26,7 @@
         "focus": true,
         "showReuseMessage": false
     },
+    "problemMatcher": "$gcc",
     "tasks": [
         {
             "label": "extra-clean",
