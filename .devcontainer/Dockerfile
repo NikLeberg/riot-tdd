@@ -11,10 +11,10 @@ RUN cd /data/riotbuild && git clone git://github.com/RIOT-OS/RIOT.git
 ENV RIOTBASE=/data/riotbuild/RIOT
 
 # Patch RIOT buildsystem to allow for external packages
-COPY 0001-buildsystem-add-EXTERNAL_PKG_DIRS-functionality.patch /tmp/
+# https://github.com/RIOT-OS/RIOT/pull/17211
 RUN cd $RIOTBASE \
-    && git apply /tmp/0001-buildsystem-add-EXTERNAL_PKG_DIRS-functionality.patch \
-    && rm /tmp/0001-buildsystem-add-EXTERNAL_PKG_DIRS-functionality.patch
+    && git fetch origin pull/17211/head:buildsystem-add-EXTERNAL_PKG_DIRS \
+    && git checkout buildsystem-add-EXTERNAL_PKG_DIRS
 
 # Install riotgen
 RUN pip3 install riotgen --no-cache-dir

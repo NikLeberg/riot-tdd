@@ -1,0 +1,263 @@
+From 5914704d707fbd1da6dc8e21bcc242c3b775feb4 Mon Sep 17 00:00:00 2001
+From: riot <riot@example.com>
+Date: Tue, 16 Nov 2021 20:43:34 +0000
+Subject: [PATCH] buildsystem: test for EXTERNAL_PKG_DIRS feature
+
+---
+ tests/external_pkg_dirs/Makefile              |  6 ++++
+ tests/external_pkg_dirs/README.md             | 16 +++++++++
+ .../external_pkgs/external_pkg/Kconfig        |  9 +++++
+ .../external_pkgs/external_pkg/Makefile       | 16 +++++++++
+ .../external_pkg/Makefile.include             |  1 +
+ .../external_pkgs/external_pkg/doc.txt        | 15 ++++++++
+ .../external_pkg/external_pkg.mk              |  3 ++
+ .../external_pkg_not_used/Kconfig             |  9 +++++
+ .../external_pkg_not_used/Makefile            | 19 ++++++++++
+ .../external_pkg_not_used/Makefile.include    |  1 +
+ .../external_pkg_not_used/doc.txt             | 15 ++++++++
+ .../external_pkg_not_used.mk                  |  3 ++
+ tests/external_pkg_dirs/main.c                | 35 +++++++++++++++++++
+ 13 files changed, 148 insertions(+)
+ create mode 100644 tests/external_pkg_dirs/Makefile
+ create mode 100644 tests/external_pkg_dirs/README.md
+ create mode 100644 tests/external_pkg_dirs/external_pkgs/external_pkg/Kconfig
+ create mode 100644 tests/external_pkg_dirs/external_pkgs/external_pkg/Makefile
+ create mode 100644 tests/external_pkg_dirs/external_pkgs/external_pkg/Makefile.include
+ create mode 100644 tests/external_pkg_dirs/external_pkgs/external_pkg/doc.txt
+ create mode 100644 tests/external_pkg_dirs/external_pkgs/external_pkg/external_pkg.mk
+ create mode 100644 tests/external_pkg_dirs/external_pkgs/external_pkg_not_used/Kconfig
+ create mode 100644 tests/external_pkg_dirs/external_pkgs/external_pkg_not_used/Makefile
+ create mode 100644 tests/external_pkg_dirs/external_pkgs/external_pkg_not_used/Makefile.include
+ create mode 100644 tests/external_pkg_dirs/external_pkgs/external_pkg_not_used/doc.txt
+ create mode 100644 tests/external_pkg_dirs/external_pkgs/external_pkg_not_used/external_pkg_not_used.mk
+ create mode 100644 tests/external_pkg_dirs/main.c
+
+diff --git a/tests/external_pkg_dirs/Makefile b/tests/external_pkg_dirs/Makefile
+new file mode 100644
+index 0000000000..7c4b6420b9
+--- /dev/null
++++ b/tests/external_pkg_dirs/Makefile
+@@ -0,0 +1,6 @@
++include ../Makefile.tests_common
++
++EXTERNAL_PKG_DIRS += external_pkgs
++USEPKG += external_pkg
++
++include $(RIOTBASE)/Makefile.include
+diff --git a/tests/external_pkg_dirs/README.md b/tests/external_pkg_dirs/README.md
+new file mode 100644
+index 0000000000..e33e14ee8e
+--- /dev/null
++++ b/tests/external_pkg_dirs/README.md
+@@ -0,0 +1,16 @@
++external_pkg_dirs
++=================
++
++Test application for the EXTERNAL_PKG_DIRS feature of the buildsystem.
++Two external packages are provided in `external_pkgs/`: `external_pkg` and
++`external_pkg_not_used`. If the first package is not properly included, a define
++from `CFLAGS` is missing and a precompiler error is triggered. If the second
++package somehow ends up included it triggers a makefile error.
++
++Usage
++=====
++
++Set `EXTERNAL_PKG_DIRS` inside Makefile to point to other paths where the
++buildsystem can look for packages. Similar functionality to `EXTERNAL_PKG_DIRS`.
++Be careful to not name these externally provided packages the same as existing
++packages in `$(RIOTBASE)/pkg/`.
+diff --git a/tests/external_pkg_dirs/external_pkgs/external_pkg/Kconfig b/tests/external_pkg_dirs/external_pkgs/external_pkg/Kconfig
+new file mode 100644
+index 0000000000..af84c5c8e2
+--- /dev/null
++++ b/tests/external_pkg_dirs/external_pkgs/external_pkg/Kconfig
+@@ -0,0 +1,9 @@
++# Copyright (c) 2021 Niklaus Leuenberger
++#
++# This file is subject to the terms and conditions of the GNU Lesser
++# General Public License v2.1. See the file LICENSE in the top level
++# directory for more details.
++
++config PACKAGE_EXTERNAL_PKG
++    bool "Test the EXTERNAL_PKG_DIRS feature"
++    depends on TEST_KCONFIG
+diff --git a/tests/external_pkg_dirs/external_pkgs/external_pkg/Makefile b/tests/external_pkg_dirs/external_pkgs/external_pkg/Makefile
+new file mode 100644
+index 0000000000..cdd177ddbd
+--- /dev/null
++++ b/tests/external_pkg_dirs/external_pkgs/external_pkg/Makefile
+@@ -0,0 +1,16 @@
++PKG_NAME = external_pkg
++
++include $(RIOTBASE)/Makefile.base
++
++.PHONY: all prepare clean distclean
++
++all: prepare
++
++prepare:
++	@:
++
++clean::
++	rm -rf $(BINDIR)/pkg/$(PKG_NAME)
++
++distclean::
++	rm -rf $(BINDIR)/pkg/$(PKG_NAME)
+diff --git a/tests/external_pkg_dirs/external_pkgs/external_pkg/Makefile.include b/tests/external_pkg_dirs/external_pkgs/external_pkg/Makefile.include
+new file mode 100644
+index 0000000000..77a1edeb6a
+--- /dev/null
++++ b/tests/external_pkg_dirs/external_pkgs/external_pkg/Makefile.include
+@@ -0,0 +1 @@
++CFLAGS += -DTEST_EXTERNAL_PKG
+diff --git a/tests/external_pkg_dirs/external_pkgs/external_pkg/doc.txt b/tests/external_pkg_dirs/external_pkgs/external_pkg/doc.txt
+new file mode 100644
+index 0000000000..46e0e50750
+--- /dev/null
++++ b/tests/external_pkg_dirs/external_pkgs/external_pkg/doc.txt
+@@ -0,0 +1,15 @@
++/**
++ * @defgroup pkg_external_pkg   Test the EXTERNAL_PKG_DIRS feature
++ * @ingroup  pkg
++ * @brief    Test package for EXTERNAL_PKG_DIRS feature
++ *
++ * # Introduction
++ *
++ * Put an introduction of the package here
++ *
++ * # License
++ *
++ * Licensed under CC BY.
++ *
++ * @see      google.com
++ */
+diff --git a/tests/external_pkg_dirs/external_pkgs/external_pkg/external_pkg.mk b/tests/external_pkg_dirs/external_pkgs/external_pkg/external_pkg.mk
+new file mode 100644
+index 0000000000..2a3f914530
+--- /dev/null
++++ b/tests/external_pkg_dirs/external_pkgs/external_pkg/external_pkg.mk
+@@ -0,0 +1,3 @@
++MODULE = external_pkg
++
++include $(RIOTBASE)/Makefile.base
+diff --git a/tests/external_pkg_dirs/external_pkgs/external_pkg_not_used/Kconfig b/tests/external_pkg_dirs/external_pkgs/external_pkg_not_used/Kconfig
+new file mode 100644
+index 0000000000..47fc067c2e
+--- /dev/null
++++ b/tests/external_pkg_dirs/external_pkgs/external_pkg_not_used/Kconfig
+@@ -0,0 +1,9 @@
++# Copyright (c) 2021 Niklaus Leuenberger
++#
++# This file is subject to the terms and conditions of the GNU Lesser
++# General Public License v2.1. See the file LICENSE in the top level
++# directory for more details.
++
++config PACKAGE_EXTERNAL_PKG_NOT_USED
++    bool "Test the EXTERNAL_PKG_DIRS feature"
++    depends on TEST_KCONFIG
+diff --git a/tests/external_pkg_dirs/external_pkgs/external_pkg_not_used/Makefile b/tests/external_pkg_dirs/external_pkgs/external_pkg_not_used/Makefile
+new file mode 100644
+index 0000000000..cb0674fbdb
+--- /dev/null
++++ b/tests/external_pkg_dirs/external_pkgs/external_pkg_not_used/Makefile
+@@ -0,0 +1,19 @@
++PKG_NAME = external_pkg_not_used
++
++include $(RIOTBASE)/Makefile.base
++
++.PHONY: all prepare clean distclean
++
++all:
++	$(error target all for external_pkg_not_used executed)
++
++prepare:
++	$(error target prepare for external_pkg_not_used executed)
++
++clean::
++	rm -rf $(BINDIR)/pkg/$(PKG_NAME)
++	$(error target clean for external_pkg_not_used executed)
++
++distclean::
++	rm -rf $(BINDIR)/pkg/$(PKG_NAME)
++	$(error target distclean for external_pkg_not_used executed)
+diff --git a/tests/external_pkg_dirs/external_pkgs/external_pkg_not_used/Makefile.include b/tests/external_pkg_dirs/external_pkgs/external_pkg_not_used/Makefile.include
+new file mode 100644
+index 0000000000..458386142f
+--- /dev/null
++++ b/tests/external_pkg_dirs/external_pkgs/external_pkg_not_used/Makefile.include
+@@ -0,0 +1 @@
++CFLAGS += -DTEST_EXTERNAL_PKG_NOT_USED
+diff --git a/tests/external_pkg_dirs/external_pkgs/external_pkg_not_used/doc.txt b/tests/external_pkg_dirs/external_pkgs/external_pkg_not_used/doc.txt
+new file mode 100644
+index 0000000000..8b5a9deea5
+--- /dev/null
++++ b/tests/external_pkg_dirs/external_pkgs/external_pkg_not_used/doc.txt
+@@ -0,0 +1,15 @@
++/**
++ * @defgroup pkg_external_pkg_not_used   Test the EXTERNAL_PKG_DIRS feature
++ * @ingroup  pkg
++ * @brief    Test package for EXTERNAL_PKG_DIRS feature
++ *
++ * # Introduction
++ *
++ * Put an introduction of the package here
++ *
++ * # License
++ *
++ * Licensed under CC BY.
++ *
++ * @see      google.com
++ */
+diff --git a/tests/external_pkg_dirs/external_pkgs/external_pkg_not_used/external_pkg_not_used.mk b/tests/external_pkg_dirs/external_pkgs/external_pkg_not_used/external_pkg_not_used.mk
+new file mode 100644
+index 0000000000..6755436286
+--- /dev/null
++++ b/tests/external_pkg_dirs/external_pkgs/external_pkg_not_used/external_pkg_not_used.mk
+@@ -0,0 +1,3 @@
++MODULE = external_pkg_not_used
++
++include $(RIOTBASE)/Makefile.base
+diff --git a/tests/external_pkg_dirs/main.c b/tests/external_pkg_dirs/main.c
+new file mode 100644
+index 0000000000..7c65ecb139
+--- /dev/null
++++ b/tests/external_pkg_dirs/main.c
+@@ -0,0 +1,35 @@
++/*
++ * Copyright (C) 2021 Niklaus Leuenberger
++ *
++ * This file is subject to the terms and conditions of the GNU Lesser
++ * General Public License v2.1. See the file LICENSE in the top level
++ * directory for more details.
++ */
++
++/**
++ * @ingroup     tests
++ * @{
++ *
++ * @file
++ * @brief       This is a test for the EXTERNAL_PKG_DIRS variable.
++ *
++ * @author      Niklaus Leuenberger <niklaus.leuenb@gmail.com>
++ *
++ * @}
++ */
++
++#include <stdio.h>
++
++#ifndef TEST_EXTERNAL_PKG
++    #error "Required external package not included."
++#endif
++
++#ifdef TEST_EXTERNAL_PKG_NOT_USED
++    #error "External package included that shouldn't be."
++#endif
++
++int main(void)
++{
++    puts("If it compiles, it works!");
++    return 0;
++}
+-- 
+2.17.1
+
