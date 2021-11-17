@@ -1,0 +1,42 @@
+name: ci
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container: nikolodion/riot-tdd:latest
+    strategy:
+      fail-fast: false
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: 📁 Setup problem matcher
+      run: |
+        echo "::add-matcher::${{github.workspace}}/.github/workflows/gcc_matcher.json"
+
+    - name: 🏗️ Build tests
+      working-directory: tests/
+      run: |
+        dirs=($(find . -type d))
+        for dir in "${dirs[@]}"; do
+          cd "$dir"
+          make
+        done
+
+    - name: 🔍 Run tests
+      working-directory: tests/
+      run: |
+        dirs=($(find . -type d))
+        for dir in "${dirs[@]}"; do
+          cd "$dir"
+          make term
+        done
+
+    - name: 🏗️ Build app
+      run: |
+        make
