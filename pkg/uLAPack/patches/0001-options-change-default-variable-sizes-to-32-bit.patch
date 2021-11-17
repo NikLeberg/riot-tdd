@@ -1,0 +1,87 @@
+From fdbb3cc1eefaa57b10b8b981a110899de116a710 Mon Sep 17 00:00:00 2001
+From: riot <riot@example.com>
+Date: Wed, 17 Nov 2021 12:36:14 +0000
+Subject: [PATCH] options: change default variable sizes to 32 bit
+
+---
+ src/ulapack_options.h | 28 ++++++++++++++--------------
+ 1 file changed, 14 insertions(+), 14 deletions(-)
+
+diff --git a/src/ulapack_options.h b/src/ulapack_options.h
+index 5fe3389..efec407 100644
+--- a/src/ulapack_options.h
++++ b/src/ulapack_options.h
+@@ -17,17 +17,17 @@
+ /*
+  * Define the entry data type.
+  */
+-#define ULAPACK_MATRIX_ENTRY_TYPE double
++#define ULAPACK_MATRIX_ENTRY_TYPE float
+ 
+ /*
+  * The data type for the row and column elements.
+  * Unsigned type recommended.
+  */
+-#define ULAPACK_INDEX_TYPE uint64_t
++#define ULAPACK_INDEX_TYPE uint32_t
+ /*
+  * The signed equivalent data type for ULAPACK_INDEX_TYPE.
+  */
+-#define ULAPACK_SIGNED_INDEX_TYPE int64_t
++#define ULAPACK_SIGNED_INDEX_TYPE int32_t
+ 
+ /*
+  * Define ULAPACK_USE_PRINT to enable the ulapack_print function.
+@@ -50,7 +50,7 @@
+  * Small value for floating point tolerance considerations
+  * for inversions and FP tolerance.
+  */
+-#define MINIMUM_THRESHOLD_TOLERANCE (.00001)
++#define MINIMUM_THRESHOLD_TOLERANCE (.00001f)
+ 
+ /*
+  * Defined if memory should be initialized to zeros.
+@@ -65,7 +65,7 @@
+ /*
+  * Keep defined for static memory allocation declarations.
+  */
+-// #define ULAPACK_USE_STATIC_ALLOC
++#define ULAPACK_USE_STATIC_ALLOC
+ 
+ /*
+  * Keep defined for dynamic memory allocation.
+@@ -112,11 +112,11 @@
+ #endif
+ 
+ #ifdef ULAPACK_USE_STATIC_ALLOC
+-    /*
+-     * Set the largest row and column sizes for uLAPack matrix types.
+-     *
+-     * @note only required to be specified when static allocation is used.
+-     */
++/*
++ * Set the largest row and column sizes for uLAPack matrix types.
++ *
++ * @note only required to be specified when static allocation is used.
++ */
+     #ifndef ULAPACK_MAX_MATRIX_N_ROWS
+         #define ULAPACK_MAX_MATRIX_N_ROWS (20u)
+     #endif
+@@ -124,10 +124,10 @@
+         #define ULAPACK_MAX_MATRIX_N_COLS (20u)
+     #endif
+ 
+-    /*
+-     * The maximum number of rows and columns must be specified
+-     * for static matrix allocation.
+-     */
++/*
++ * The maximum number of rows and columns must be specified
++ * for static matrix allocation.
++ */
+     #ifndef ULAPACK_MAX_MATRIX_N_ROWS
+         #error "ULAPACK_MAX_MATRIX_N_ROWS not defined."
+     #endif
+-- 
+2.17.1
+
