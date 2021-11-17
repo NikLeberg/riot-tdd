@@ -21,21 +21,11 @@ jobs:
 
     - name: 🏗️ Build tests
       working-directory: tests/
-      run: |
-        dirs=($(find . -type d))
-        for dir in "${dirs[@]}"; do
-          cd "$dir"
-          make
-        done
+      run: ./run-all.sh all
 
     - name: 🔍 Run tests
       working-directory: tests/
-      run: |
-        dirs=($(find . -type d))
-        for dir in "${dirs[@]}"; do
-          cd "$dir"
-          make term
-        done
+      run: ./run-all.sh term
 
     - name: 🏗️ Build app
       run: |
