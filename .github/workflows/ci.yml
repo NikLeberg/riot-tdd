@@ -15,17 +15,18 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - name: 📁 Setup problem matcher
+    - name: 📁 Setup problem matchers
       run: |
         echo "::add-matcher::${{github.workspace}}/.github/workflows/gcc_matcher.json"
+        echo "::add-matcher::${{github.workspace}}/.github/workflows/embunit_matcher.json"
 
     - name: 🏗️ Build tests
       working-directory: tests/
-      run: ./run-all.sh all
+      run: ./make_for_each_dir.sh all
 
     - name: 🔍 Run tests
       working-directory: tests/
-      run: ./run-all.sh term
+      run: ./make_for_each_dir.sh term
 
     - name: 🏗️ Build app
       run: |

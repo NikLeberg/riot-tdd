@@ -37,6 +37,7 @@ static void test_hello_module_set_message_can_set_message(void)
 static void test_hello_module_hello_module_print_message_can_be_called(void)
 {
     TEST_ASSERT_EQUAL_INT(0, hello_module_print_message());
+    TEST_ASSERT_EQUAL_INT(0, 1); // intentional fail
     return;
 }
 

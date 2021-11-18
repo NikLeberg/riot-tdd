@@ -6,7 +6,7 @@ RIOTBASE ?= /data/riotbuild/RIOT
 QUIET ?= 1
 DEVELHELP ?= 1
 
-CFLAGS += -DTHREAD_STACKSIZE_MAIN=THREAD_STACKSIZE_LARGE
+# Enable text output of embUnit
 OUTPUT=TEXT
 
 # Add path our own modules and packages (path as seen from test app)

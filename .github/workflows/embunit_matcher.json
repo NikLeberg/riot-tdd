@@ -1,0 +1,16 @@
+{
+    "problemMatcher": [
+        {
+            "owner": "embunit-problem-matcher",
+            "pattern": [
+                {
+                    "regexp": "^.*?\\) NG test_.+ \\((.+) (.+)\\) (.*?)$",
+                    "file": 1,
+                    "line": 2,
+                    "message": 3
+                }
+            ],
+            "fileLocation": "absolute"
+        }
+    ]
+}

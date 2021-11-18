@@ -26,11 +26,11 @@
         "focus": true,
         "showReuseMessage": false
     },
+    "type": "shell",
     "problemMatcher": "$gcc",
     "tasks": [
         {
             "label": "extra-clean",
-            "type": "shell",
             "command": "make clean",
             "presentation": {
                 "reveal": "never",
@@ -39,22 +39,18 @@
         },
         {
             "label": "extra-compile-commands",
-            "type": "shell",
             "command": "make compile-commands"
         },
         {
             "label": "extra-disassemble",
-            "type": "shell",
             "command": "make disassemble"
         },
         {
             "label": "extra-debug-server",
-            "type": "shell",
             "command": "make debug-server"
         },
         {
             "label": "build",
-            "type": "shell",
             "command": "make",
             "dependsOn": [
                 "extra-compile-commands"
@@ -62,13 +58,33 @@
         },
         {
             "label": "flash",
-            "type": "shell",
             "command": "make flash"
         },
         {
             "label": "terminal",
-            "type": "shell",
             "command": "make term"
+        },
+        {
+            "label": "test",
+            "options": {
+                "cwd": "${workspaceFolder}/tests/"
+            },
+            "command": "./make_for_each_dir.sh all && ./make_for_each_dir.sh term",
+            "problemMatcher": [
+                "$gcc",
+                {
+                    "owner": "embunit-problem-matcher",
+                    "pattern": [
+                        {
+                            "regexp": "^.*?\\) NG test_.+ \\((.+) (.+)\\) (.*?)$",
+                            "file": 1,
+                            "line": 2,
+                            "message": 3
+                        }
+                    ],
+                    "fileLocation": "absolute"
+                }
+            ]
         }
     ]
 }
