@@ -56,9 +56,9 @@ int main(void)
 {
     puts("Running unittest for module 'hello_module'");
 
-    TextUIRunner_start();
+    TESTS_START();
     TESTS_RUN(tests_hello_module_tests());
-    TextUIRunner_end();
+    TESTS_END();
 
     pm_off();
     return 0;

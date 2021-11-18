@@ -20,13 +20,9 @@ jobs:
         echo "::add-matcher::${{github.workspace}}/.github/workflows/gcc_matcher.json"
         echo "::add-matcher::${{github.workspace}}/.github/workflows/embunit_matcher.json"
 
-    - name: 🏗️ Build tests
+    - name: 🔍 Build and run tests
       working-directory: tests/
-      run: ./make_for_each_dir.sh all
-
-    - name: 🔍 Run tests
-      working-directory: tests/
-      run: ./make_for_each_dir.sh term
+      run: ./run_all_tests.sh
 
     - name: 🏗️ Build app
       run: |

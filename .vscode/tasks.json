@@ -69,7 +69,7 @@
             "options": {
                 "cwd": "${workspaceFolder}/tests/"
             },
-            "command": "./make_for_each_dir.sh all && ./make_for_each_dir.sh term",
+            "command": "./run_all_tests.sh",
             "problemMatcher": [
                 "$gcc",
                 {
